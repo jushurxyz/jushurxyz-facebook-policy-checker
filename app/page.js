@@ -158,6 +158,18 @@ export default function Home() {
         padding: "40px 20px"
       }}
     >
+      <style jsx global>{`
+        @keyframes spin {
+          0% {
+            transform: rotate(0deg);
+          }
+
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
+
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <div style={{ marginBottom: 40 }}>
           <h1
@@ -260,11 +272,28 @@ export default function Home() {
                 padding: "16px 28px",
                 fontSize: 18,
                 fontWeight: "bold",
-                cursor: "pointer"
+                cursor: loading || ocrLoading || !text.trim() ? "not-allowed" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 10
               }}
             >
+              {loading && (
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 18,
+                    height: 18,
+                    border: "3px solid rgba(255,255,255,0.3)",
+                    borderTop: "3px solid white",
+                    borderRadius: "50%",
+                    animation: "spin 1s linear infinite"
+                  }}
+                />
+              )}
+
               {loading
-                ? "Analisi in corso..."
+                ? "Analisi AI in corso..."
                 : "Analizza contenuto"}
             </button>
 
@@ -304,6 +333,27 @@ export default function Home() {
               Cancella storico
             </button>
           </div>
+
+          {loading && (
+            <div
+              style={{
+                marginTop: 24,
+                background: "#0f172a",
+                border: "1px solid #334155",
+                borderRadius: 16,
+                padding: 18,
+                color: "#cbd5e1"
+              }}
+            >
+              <strong style={{ color: "#93c5fd" }}>
+                Operazione in corso
+              </strong>
+              <p style={{ marginBottom: 0 }}>
+                L’AI sta analizzando il contenuto, valutando linguaggio,
+                contesto e possibili aree delle policy Meta coinvolte.
+              </p>
+            </div>
+          )}
         </div>
 
         {result && (
