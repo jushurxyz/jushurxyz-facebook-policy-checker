@@ -1,6 +1,6 @@
 export async function POST(request) {
   try {
-    const { text, context } = await request.json();
+    const { sourceUrl, text, context } = await request.json();
 
     if (!text || text.trim().length < 5) {
       return Response.json({
@@ -26,6 +26,10 @@ IMPORTANTE:
 - Rispondi sempre in italiano.
 - Il tono deve essere professionale, prudente e chiaro.
 - Usa il contesto fornito dall'utente solo per interpretare meglio il contenuto, ma non assumerlo come prova assoluta.
+- L'URL fornito dall'utente è solo un riferimento. Non devi fingere di aver visitato o letto direttamente il link.
+
+URL di origine fornito dall'utente:
+"${sourceUrl || "Nessun URL fornito."}"
 
 Contesto fornito dall'utente:
 "${context || "Nessun contesto aggiuntivo fornito."}"
@@ -61,6 +65,9 @@ Basso / Medio / Alto
 
 ELEMENTI PROBLEMATICI
 Riporta solo brevi estratti o descrizioni degli elementi problematici.
+
+URL DI ORIGINE
+Riporta l'URL fornito, specificando che è stato usato solo come riferimento e non letto automaticamente.
 
 CONTESTO CONSIDERATO
 Spiega brevemente se e come il contesto fornito dall'utente ha influenzato l'analisi.
