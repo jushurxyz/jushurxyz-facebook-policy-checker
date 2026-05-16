@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Tesseract from "tesseract.js";
 
 export default function Home() {
+  const [sourceUrl, setSourceUrl] = useState("");
   const [text, setText] = useState("");
   const [context, setContext] = useState("");
   const [result, setResult] = useState("");
@@ -32,6 +33,7 @@ export default function Home() {
     ];
 
     let index = 0;
+
     const interval = setInterval(() => {
       index = (index + 1) % steps.length;
       setAnalysisStep(steps[index]);
@@ -54,10 +56,11 @@ export default function Home() {
     return { label: "RISCHIO BASSO", color: "#22c55e", background: "#14532d" };
   }, [result]);
 
-  function saveToHistory(content, contextText, analysis) {
+  function saveToHistory(url, content, contextText, analysis) {
     const newEntry = {
       id: Date.now(),
       date: new Date().toLocaleString(),
+      sourceUrl: url,
       content,
       context: contextText,
       analysis
@@ -83,14 +86,14 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ text, context })
+        body: JSON.stringify({ sourceUrl, text, context })
       });
 
       const data = await response.json();
       const analysisResult = data.result || "Nessun risultato.";
 
       setResult(analysisResult);
-      saveToHistory(text, context, analysisResult);
+      saveToHistory(sourceUrl, text, context, analysisResult);
     } catch (error) {
       setResult("Errore durante la richiesta.");
     }
@@ -284,12 +287,7 @@ export default function Home() {
             Regole della Community Meta tramite AI.
           </p>
 
-          <div
-            style={{
-              marginTop: 24,
-              maxWidth: 900
-            }}
-          >
+          <div style={{ marginTop: 24, maxWidth: 900 }}>
             <button
               onClick={() => setShowDisclaimer(!showDisclaimer)}
               style={{
@@ -308,13 +306,7 @@ export default function Home() {
               }}
             >
               <span>Disclaimer legale</span>
-
-              <span
-                style={{
-                  fontSize: 24,
-                  lineHeight: 1
-                }}
-              >
+              <span style={{ fontSize: 24, lineHeight: 1 }}>
                 {showDisclaimer ? "−" : "+"}
               </span>
             </button>
@@ -364,6 +356,36 @@ export default function Home() {
             boxShadow: "0 10px 30px rgba(0,0,0,0.4)"
           }}
         >
+          <label
+            style={{
+              display: "block",
+              marginBottom: 12,
+              fontSize: 18,
+              fontWeight: "bold"
+            }}
+          >
+            URL di origine / link del post
+          </label>
+
+          <input
+            type="url"
+            style={{
+              width: "100%",
+              background: "#0f172a",
+              color: "white",
+              border: "1px solid #334155",
+              borderRadius: 16,
+              padding: 18,
+              fontSize: 18,
+              outline: "none",
+              boxSizing: "border-box",
+              marginBottom: 22
+            }}
+            placeholder="Incolla qui il link del post Facebook, senza analisi automatica del link..."
+            value={sourceUrl}
+            onChange={(e) => setSourceUrl(e.target.value)}
+          />
+
           <label
             style={{
               display: "block",
@@ -502,6 +524,7 @@ export default function Home() {
 
             <button
               onClick={() => {
+                setSourceUrl("");
                 setText("");
                 setContext("");
                 setResult("");
@@ -562,6 +585,24 @@ export default function Home() {
             >
               {riskInfo.label}
             </div>
+
+            {sourceUrl && (
+              <div
+                style={{
+                  background: "#0f172a",
+                  border: "1px solid #334155",
+                  borderRadius: 14,
+                  padding: 16,
+                  marginBottom: 22,
+                  color: "#93c5fd",
+                  wordBreak: "break-word"
+                }}
+              >
+                <strong>URL di origine:</strong>
+                <br />
+                {sourceUrl}
+              </div>
+            )}
 
             <div
               style={{
@@ -678,6 +719,24 @@ export default function Home() {
                   >
                     {item.date}
                   </div>
+
+                  {item.sourceUrl && (
+                    <div
+                      style={{
+                        marginBottom: 18,
+                        color: "#93c5fd",
+                        background: "#0f172a",
+                        border: "1px solid #334155",
+                        borderRadius: 12,
+                        padding: 14,
+                        wordBreak: "break-word"
+                      }}
+                    >
+                      <strong>URL di origine:</strong>
+                      <br />
+                      {item.sourceUrl}
+                    </div>
+                  )}
 
                   <div
                     style={{
