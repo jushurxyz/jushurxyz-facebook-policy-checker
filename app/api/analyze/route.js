@@ -1,5 +1,3 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
 export async function POST(request) {
   try {
     const { text } = await request.json();
@@ -10,17 +8,11 @@ export async function POST(request) {
       });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.OPENROUTER_API_KEY) {
       return Response.json({
-        result: "ERRORE: la variabile GEMINI_API_KEY non risulta configurata su Vercel."
+        result: "ERRORE: la variabile OPENROUTER_API_KEY non risulta configurata su Vercel."
       });
     }
-
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash"
-    });
 
     const prompt = `
 Sei un assistente che aiuta a valutare se un contenuto potrebbe violare le Regole della Community di Meta/Facebook.
@@ -44,8 +36,34 @@ Spiegazione:
 Suggerimento operativo:
 `;
 
-    const result = await model.generateContent(prompt);
-    const output = result.response.text();
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://facebook-policy-checker.vercel.app",
+        "X-Title": "Facebook Policy Checker"
+      },
+      body: JSON.stringify({
+        model: "openrouter/free",
+        messages: [
+          {
+            role: "user",
+            content: prompt
+          }
+        ]
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return Response.json({
+        result: "ERRORE OPENROUTER: " + JSON.stringify(data)
+      });
+    }
+
+    const output = data.choices?.[0]?.message?.content || "Nessuna risposta ricevuta dal modello.";
 
     return Response.json({ result: output });
 
