@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Tesseract from "tesseract.js";
 
 export default function Home() {
@@ -9,6 +9,33 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrProgress, setOcrProgress] = useState("");
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("policy_checker_history");
+
+    if (saved) {
+      setHistory(JSON.parse(saved));
+    }
+  }, []);
+
+  function saveToHistory(content, analysis) {
+    const newEntry = {
+      id: Date.now(),
+      date: new Date().toLocaleString(),
+      content,
+      analysis
+    };
+
+    const updatedHistory = [newEntry, ...history];
+
+    setHistory(updatedHistory);
+
+    localStorage.setItem(
+      "policy_checker_history",
+      JSON.stringify(updatedHistory)
+    );
+  }
 
   async function analyzeContent() {
     setLoading(true);
@@ -24,7 +51,13 @@ export default function Home() {
       });
 
       const data = await response.json();
-      setResult(data.result || "Nessun risultato.");
+
+      const analysisResult = data.result || "Nessun risultato.";
+
+      setResult(analysisResult);
+
+      saveToHistory(text, analysisResult);
+
     } catch (error) {
       setResult("Errore durante la richiesta.");
     }
@@ -44,7 +77,9 @@ export default function Home() {
       const ocrResult = await Tesseract.recognize(file, "ita+eng", {
         logger: (m) => {
           if (m.status === "recognizing text") {
-            setOcrProgress(`Riconoscimento testo: ${Math.round(m.progress * 100)}%`);
+            setOcrProgress(
+              `Riconoscimento testo: ${Math.round(m.progress * 100)}%`
+            );
           }
         }
       });
@@ -54,18 +89,28 @@ export default function Home() {
       if (extractedText) {
         setText((prev) =>
           prev
-            ? prev + "\n\n--- Testo estratto dallo screenshot ---\n" + extractedText
+            ? prev +
+                "\n\n--- Testo estratto dallo screenshot ---\n" +
+                extractedText
             : extractedText
         );
+
         setOcrProgress("Testo estratto correttamente.");
       } else {
-        setOcrProgress("Non è stato trovato testo leggibile nello screenshot.");
+        setOcrProgress(
+          "Non è stato trovato testo leggibile nello screenshot."
+        );
       }
     } catch (error) {
       setOcrProgress("Errore durante la lettura dello screenshot.");
     }
 
     setOcrLoading(false);
+  }
+
+  function clearHistory() {
+    localStorage.removeItem("policy_checker_history");
+    setHistory([]);
   }
 
   return (
@@ -78,15 +123,28 @@ export default function Home() {
         padding: "40px 20px"
       }}
     >
-      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <div style={{ marginBottom: 40 }}>
-          <h1 style={{ fontSize: 48, marginBottom: 10, fontWeight: "bold" }}>
+          <h1
+            style={{
+              fontSize: 48,
+              marginBottom: 10,
+              fontWeight: "bold"
+            }}
+          >
             Facebook Policy Checker
           </h1>
 
-          <p style={{ fontSize: 20, color: "#cbd5e1", maxWidth: 760, lineHeight: 1.5 }}>
-            Incolla un testo o carica uno screenshot Facebook. L’app estrarrà il testo e analizzerà
-            possibili violazioni delle Regole della Community Meta.
+          <p
+            style={{
+              fontSize: 20,
+              color: "#cbd5e1",
+              maxWidth: 760,
+              lineHeight: 1.5
+            }}
+          >
+            Analizza contenuti Facebook e rileva possibili violazioni delle
+            Regole della Community Meta tramite AI.
           </p>
         </div>
 
@@ -126,22 +184,8 @@ export default function Home() {
           />
 
           {ocrProgress && (
-            <p style={{ color: "#93c5fd", marginTop: 0 }}>
-              {ocrProgress}
-            </p>
+            <p style={{ color: "#93c5fd" }}>{ocrProgress}</p>
           )}
-
-          <label
-            style={{
-              display: "block",
-              marginTop: 24,
-              marginBottom: 12,
-              fontSize: 18,
-              fontWeight: "bold"
-            }}
-          >
-            Testo da analizzare
-          </label>
 
           <textarea
             style={{
@@ -157,12 +201,19 @@ export default function Home() {
               outline: "none",
               boxSizing: "border-box"
             }}
-            placeholder="Incolla qui il contenuto Facebook oppure carica uno screenshot..."
+            placeholder="Incolla qui il contenuto Facebook..."
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
 
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              flexWrap: "wrap",
+              marginTop: 20
+            }}
+          >
             <button
               onClick={analyzeContent}
               disabled={loading || ocrLoading || !text.trim()}
@@ -177,7 +228,9 @@ export default function Home() {
                 cursor: "pointer"
               }}
             >
-              {loading ? "Analisi in corso..." : "Analizza contenuto"}
+              {loading
+                ? "Analisi in corso..."
+                : "Analizza contenuto"}
             </button>
 
             <button
@@ -199,6 +252,22 @@ export default function Home() {
             >
               Pulisci
             </button>
+
+            <button
+              onClick={clearHistory}
+              style={{
+                background: "#7f1d1d",
+                color: "white",
+                border: "none",
+                borderRadius: 14,
+                padding: "16px 28px",
+                fontSize: 18,
+                fontWeight: "bold",
+                cursor: "pointer"
+              }}
+            >
+              Cancella storico
+            </button>
           </div>
         </div>
 
@@ -208,11 +277,10 @@ export default function Home() {
               marginTop: 40,
               background: "#1e293b",
               borderRadius: 20,
-              padding: 30,
-              boxShadow: "0 10px 30px rgba(0,0,0,0.4)"
+              padding: 30
             }}
           >
-            <h2 style={{ marginTop: 0, fontSize: 32 }}>
+            <h2 style={{ marginTop: 0 }}>
               Risultato analisi
             </h2>
 
@@ -225,6 +293,74 @@ export default function Home() {
               }}
             >
               {result}
+            </div>
+          </div>
+        )}
+
+        {history.length > 0 && (
+          <div
+            style={{
+              marginTop: 50
+            }}
+          >
+            <h2
+              style={{
+                marginBottom: 20,
+                fontSize: 36
+              }}
+            >
+              Storico analisi
+            </h2>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 20
+              }}
+            >
+              {history.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    background: "#1e293b",
+                    borderRadius: 18,
+                    padding: 24
+                  }}
+                >
+                  <div
+                    style={{
+                      marginBottom: 12,
+                      color: "#93c5fd",
+                      fontSize: 14
+                    }}
+                  >
+                    {item.date}
+                  </div>
+
+                  <div
+                    style={{
+                      marginBottom: 18,
+                      color: "#cbd5e1",
+                      whiteSpace: "pre-wrap"
+                    }}
+                  >
+                    {item.content}
+                  </div>
+
+                  <div
+                    style={{
+                      background: "#0f172a",
+                      borderRadius: 14,
+                      padding: 18,
+                      whiteSpace: "pre-wrap",
+                      lineHeight: 1.6
+                    }}
+                  >
+                    {item.analysis}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
