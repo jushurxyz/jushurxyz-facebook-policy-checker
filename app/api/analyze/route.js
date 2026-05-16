@@ -10,6 +10,12 @@ export async function POST(request) {
       });
     }
 
+    if (!process.env.GEMINI_API_KEY) {
+      return Response.json({
+        result: "ERRORE: la variabile GEMINI_API_KEY non risulta configurata su Vercel."
+      });
+    }
+
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
     const model = genAI.getGenerativeModel({
@@ -22,7 +28,6 @@ Sei un assistente che aiuta a valutare se un contenuto potrebbe violare le Regol
 IMPORTANTE:
 - Non dire mai che la violazione è certa.
 - Usa formule come "possibile violazione", "potenzialmente problematico", "richiede revisione".
-- Non inventare norme inesistenti.
 - Rispondi in italiano.
 - Fornisci un report chiaro e sintetico.
 
@@ -43,11 +48,10 @@ Suggerimento operativo:
     const output = result.response.text();
 
     return Response.json({ result: output });
-  } catch (error) {
-    console.error(error);
 
+  } catch (error) {
     return Response.json({
-      result: "Errore tecnico durante l’analisi. Controlla che la chiave API Gemini sia configurata correttamente."
+      result: "ERRORE REALE: " + error.message
     });
   }
 }
