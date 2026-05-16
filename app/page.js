@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Tesseract from "tesseract.js";
 
 export default function Home() {
@@ -18,6 +18,32 @@ export default function Home() {
       setHistory(JSON.parse(saved));
     }
   }, []);
+
+  const riskInfo = useMemo(() => {
+    const lower = result.toLowerCase();
+
+    if (lower.includes("alto")) {
+      return {
+        label: "RISCHIO ALTO",
+        color: "#dc2626",
+        background: "#7f1d1d"
+      };
+    }
+
+    if (lower.includes("medio")) {
+      return {
+        label: "RISCHIO MEDIO",
+        color: "#f59e0b",
+        background: "#78350f"
+      };
+    }
+
+    return {
+      label: "RISCHIO BASSO",
+      color: "#22c55e",
+      background: "#14532d"
+    };
+  }, [result]);
 
   function saveToHistory(content, analysis) {
     const newEntry = {
@@ -111,6 +137,15 @@ export default function Home() {
   function clearHistory() {
     localStorage.removeItem("policy_checker_history");
     setHistory([]);
+  }
+
+  async function copyReport() {
+    try {
+      await navigator.clipboard.writeText(result);
+      alert("Report copiato negli appunti.");
+    } catch (error) {
+      alert("Errore durante la copia.");
+    }
   }
 
   return (
@@ -280,29 +315,122 @@ export default function Home() {
               padding: 30
             }}
           >
-            <h2 style={{ marginTop: 0 }}>
-              Risultato analisi
-            </h2>
+            <div
+              style={{
+                display: "inline-block",
+                background: riskInfo.background,
+                color: riskInfo.color,
+                padding: "10px 18px",
+                borderRadius: 999,
+                fontWeight: "bold",
+                marginBottom: 24,
+                border: `2px solid ${riskInfo.color}`
+              }}
+            >
+              {riskInfo.label}
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 16,
+                flexWrap: "wrap",
+                marginBottom: 30
+              }}
+            >
+              <div
+                style={{
+                  background: "#0f172a",
+                  padding: 20,
+                  borderRadius: 16,
+                  flex: 1,
+                  minWidth: 220
+                }}
+              >
+                <div
+                  style={{
+                    color: "#94a3b8",
+                    marginBottom: 10
+                  }}
+                >
+                  Stato analisi
+                </div>
+
+                <div
+                  style={{
+                    fontSize: 24,
+                    fontWeight: "bold"
+                  }}
+                >
+                  Completata
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: "#0f172a",
+                  padding: 20,
+                  borderRadius: 16,
+                  flex: 1,
+                  minWidth: 220
+                }}
+              >
+                <div
+                  style={{
+                    color: "#94a3b8",
+                    marginBottom: 10
+                  }}
+                >
+                  Valutazione rischio
+                </div>
+
+                <div
+                  style={{
+                    fontSize: 24,
+                    fontWeight: "bold",
+                    color: riskInfo.color
+                  }}
+                >
+                  {riskInfo.label}
+                </div>
+              </div>
+            </div>
 
             <div
               style={{
                 whiteSpace: "pre-wrap",
                 lineHeight: 1.7,
                 fontSize: 18,
-                color: "#e2e8f0"
+                color: "#e2e8f0",
+                background: "#0f172a",
+                padding: 24,
+                borderRadius: 16
               }}
             >
               {result}
             </div>
+
+            <button
+              onClick={copyReport}
+              style={{
+                marginTop: 24,
+                background: "#2563eb",
+                color: "white",
+                border: "none",
+                borderRadius: 14,
+                padding: "14px 24px",
+                fontSize: 16,
+                fontWeight: "bold",
+                cursor: "pointer"
+              }}
+            >
+              Copia report
+            </button>
           </div>
         )}
 
         {history.length > 0 && (
-          <div
-            style={{
-              marginTop: 50
-            }}
-          >
+          <div style={{ marginTop: 50 }}>
             <h2
               style={{
                 marginBottom: 20,
