@@ -15,25 +15,63 @@ export async function POST(request) {
     }
 
     const prompt = `
-Sei un assistente che aiuta a valutare se un contenuto potrebbe violare le Regole della Community di Meta/Facebook.
+Sei un assistente specializzato nell'analisi preliminare di contenuti Facebook rispetto alle Regole della Community di Meta.
 
 IMPORTANTE:
-- Non dire mai che la violazione è certa.
-- Usa formule come "possibile violazione", "potenzialmente problematico", "richiede revisione".
-- Rispondi in italiano.
-- Fornisci un report chiaro e sintetico.
+- Non dichiarare mai che una violazione è certa.
+- Usa sempre formule come "possibile violazione", "potenzialmente problematico", "richiede revisione".
+- Non fingere di rappresentare Meta o Facebook.
+- Non inventare norme inesistenti.
+- Rispondi sempre in italiano.
+- Il tono deve essere professionale, prudente e chiaro.
 
 Analizza questo contenuto:
 
 "${text}"
 
-Restituisci il risultato con questa struttura:
+Restituisci un report strutturato in questo formato:
 
-Categoria della possibile violazione:
-Livello di rischio: basso / medio / alto
-Elementi problematici:
-Spiegazione:
-Suggerimento operativo:
+VALUTAZIONE GENERALE
+Indica se il contenuto appare:
+- non problematico
+- potenzialmente problematico
+- ad alto rischio
+
+CATEGORIA POSSIBILE
+Indica una o più categorie tra:
+- Incitamento all'odio
+- Minacce o violenza
+- Bullismo o molestie
+- Linguaggio offensivo
+- Contenuti sessuali o nudità
+- Contenuti violenti o grafici
+- Autolesionismo
+- Spam o truffa
+- Disinformazione
+- Violazione della privacy
+- Altro
+
+LIVELLO DI RISCHIO
+Basso / Medio / Alto
+
+ELEMENTI PROBLEMATICI
+Riporta solo brevi estratti o descrizioni degli elementi problematici.
+
+NORMA META POTENZIALMENTE COINVOLTA
+Descrivi in modo prudente la possibile area delle Regole della Community interessata.
+
+SPIEGAZIONE
+Spiega perché il contenuto potrebbe essere problematico o perché non lo è.
+
+SUGGERIMENTO OPERATIVO
+Indica se:
+- non sembra necessario intervenire
+- conviene revisionare manualmente
+- conviene segnalare a Facebook/Meta
+- conviene conservare uno screenshot come prova
+
+AVVERTENZA
+Ricorda che solo Meta può stabilire ufficialmente se il contenuto viola le proprie regole.
 `;
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -63,7 +101,9 @@ Suggerimento operativo:
       });
     }
 
-    const output = data.choices?.[0]?.message?.content || "Nessuna risposta ricevuta dal modello.";
+    const output =
+      data.choices?.[0]?.message?.content ||
+      "Nessuna risposta ricevuta dal modello.";
 
     return Response.json({ result: output });
 
