@@ -255,12 +255,7 @@ export default function Home() {
               }}
             />
 
-            <h2
-              style={{
-                fontSize: 30,
-                margin: "0 0 12px"
-              }}
-            >
+            <h2 style={{ fontSize: 30, margin: "0 0 12px" }}>
               Analisi AI in corso
             </h2>
 
@@ -311,13 +306,7 @@ export default function Home() {
 
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <div style={{ marginBottom: 40 }}>
-          <h1
-            style={{
-              fontSize: 48,
-              marginBottom: 10,
-              fontWeight: "bold"
-            }}
-          >
+          <h1 style={{ fontSize: 48, marginBottom: 10, fontWeight: "bold" }}>
             Facebook Policy Checker
           </h1>
 
@@ -332,6 +321,49 @@ export default function Home() {
             Analizza contenuti Facebook e rileva possibili violazioni delle
             Regole della Community Meta tramite AI.
           </p>
+
+          <div
+            style={{
+              marginTop: 24,
+              background: "rgba(245, 158, 11, 0.12)",
+              border: "1px solid rgba(245, 158, 11, 0.35)",
+              borderRadius: 16,
+              padding: 18,
+              maxWidth: 900
+            }}
+          >
+            <div
+              style={{
+                color: "#fbbf24",
+                fontWeight: "bold",
+                marginBottom: 10,
+                fontSize: 16
+              }}
+            >
+              Disclaimer legale
+            </div>
+
+            <div
+              style={{
+                color: "#fde68a",
+                lineHeight: 1.7,
+                fontSize: 15
+              }}
+            >
+              Questa applicazione fornisce esclusivamente un’analisi preliminare
+              automatizzata basata su modelli di intelligenza artificiale e non
+              rappresenta una valutazione ufficiale di Meta/Facebook.
+              <br />
+              <br />
+              L’eventuale presenza di contenuti potenzialmente problematici non
+              implica necessariamente una violazione effettiva delle Regole della
+              Community.
+              <br />
+              <br />
+              Solo Meta Platforms può stabilire ufficialmente se un contenuto
+              viola le proprie policy o richiede interventi di moderazione.
+            </div>
+          </div>
         </div>
 
         <div
@@ -369,9 +401,7 @@ export default function Home() {
             }}
           />
 
-          {ocrProgress && (
-            <p style={{ color: "#93c5fd" }}>{ocrProgress}</p>
-          )}
+          {ocrProgress && <p style={{ color: "#93c5fd" }}>{ocrProgress}</p>}
 
           <textarea
             style={{
@@ -434,9 +464,7 @@ export default function Home() {
                 />
               )}
 
-              {loading
-                ? "Analisi AI in corso..."
-                : "Analizza contenuto"}
+              {loading ? "Analisi AI in corso..." : "Analizza contenuto"}
             </button>
 
             <button
@@ -518,21 +546,11 @@ export default function Home() {
                   minWidth: 220
                 }}
               >
-                <div
-                  style={{
-                    color: "#94a3b8",
-                    marginBottom: 10
-                  }}
-                >
+                <div style={{ color: "#94a3b8", marginBottom: 10 }}>
                   Stato analisi
                 </div>
 
-                <div
-                  style={{
-                    fontSize: 24,
-                    fontWeight: "bold"
-                  }}
-                >
+                <div style={{ fontSize: 24, fontWeight: "bold" }}>
                   Completata
                 </div>
               </div>
@@ -546,12 +564,7 @@ export default function Home() {
                   minWidth: 220
                 }}
               >
-                <div
-                  style={{
-                    color: "#94a3b8",
-                    marginBottom: 10
-                  }}
-                >
+                <div style={{ color: "#94a3b8", marginBottom: 10 }}>
                   Valutazione rischio
                 </div>
 
@@ -602,12 +615,7 @@ export default function Home() {
 
         {history.length > 0 && (
           <div style={{ marginTop: 50 }}>
-            <h2
-              style={{
-                marginBottom: 20,
-                fontSize: 36
-              }}
-            >
+            <h2 style={{ marginBottom: 20, fontSize: 36 }}>
               Storico analisi
             </h2>
 
