@@ -10,6 +10,7 @@ export default function Home() {
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrProgress, setOcrProgress] = useState("");
   const [history, setHistory] = useState([]);
+  const [analysisStep, setAnalysisStep] = useState("Preparazione analisi...");
 
   useEffect(() => {
     const saved = localStorage.getItem("policy_checker_history");
@@ -18,6 +19,28 @@ export default function Home() {
       setHistory(JSON.parse(saved));
     }
   }, []);
+
+  useEffect(() => {
+    if (!loading) return;
+
+    const steps = [
+      "Preparazione analisi...",
+      "Controllo linguaggio e tono...",
+      "Valutazione possibili violazioni...",
+      "Confronto con aree policy Meta...",
+      "Calcolo livello di rischio...",
+      "Generazione report finale..."
+    ];
+
+    let index = 0;
+
+    const interval = setInterval(() => {
+      index = (index + 1) % steps.length;
+      setAnalysisStep(steps[index]);
+    }, 1400);
+
+    return () => clearInterval(interval);
+  }, [loading]);
 
   const riskInfo = useMemo(() => {
     const lower = result.toLowerCase();
@@ -66,6 +89,7 @@ export default function Home() {
   async function analyzeContent() {
     setLoading(true);
     setResult("");
+    setAnalysisStep("Preparazione analisi...");
 
     try {
       const response = await fetch("/api/analyze", {
@@ -81,9 +105,7 @@ export default function Home() {
       const analysisResult = data.result || "Nessun risultato.";
 
       setResult(analysisResult);
-
       saveToHistory(text, analysisResult);
-
     } catch (error) {
       setResult("Errore durante la richiesta.");
     }
@@ -116,8 +138,8 @@ export default function Home() {
         setText((prev) =>
           prev
             ? prev +
-                "\n\n--- Testo estratto dallo screenshot ---\n" +
-                extractedText
+              "\n\n--- Testo estratto dallo screenshot ---\n" +
+              extractedText
             : extractedText
         );
 
@@ -155,7 +177,8 @@ export default function Home() {
         background: "#0f172a",
         color: "white",
         fontFamily: "Arial, sans-serif",
-        padding: "40px 20px"
+        padding: "40px 20px",
+        position: "relative"
       }}
     >
       <style jsx global>{`
@@ -168,7 +191,123 @@ export default function Home() {
             transform: rotate(360deg);
           }
         }
+
+        @keyframes progress {
+          0% {
+            transform: translateX(-100%);
+          }
+
+          100% {
+            transform: translateX(220%);
+          }
+        }
+
+        @keyframes pulseGlow {
+          0% {
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.25);
+          }
+
+          50% {
+            box-shadow: 0 0 45px rgba(37, 99, 235, 0.75);
+          }
+
+          100% {
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.25);
+          }
+        }
       `}</style>
+
+      {loading && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(2, 6, 23, 0.82)",
+            backdropFilter: "blur(6px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 520,
+              background: "#1e293b",
+              border: "1px solid #334155",
+              borderRadius: 28,
+              padding: 34,
+              textAlign: "center",
+              animation: "pulseGlow 2s infinite"
+            }}
+          >
+            <div
+              style={{
+                width: 72,
+                height: 72,
+                border: "6px solid rgba(255,255,255,0.18)",
+                borderTop: "6px solid #60a5fa",
+                borderRadius: "50%",
+                animation: "spin 1s linear infinite",
+                margin: "0 auto 24px"
+              }}
+            />
+
+            <h2
+              style={{
+                fontSize: 30,
+                margin: "0 0 12px"
+              }}
+            >
+              Analisi AI in corso
+            </h2>
+
+            <p
+              style={{
+                color: "#cbd5e1",
+                fontSize: 18,
+                lineHeight: 1.5,
+                marginBottom: 24
+              }}
+            >
+              {analysisStep}
+            </p>
+
+            <div
+              style={{
+                height: 10,
+                background: "#0f172a",
+                borderRadius: 999,
+                overflow: "hidden",
+                border: "1px solid #334155"
+              }}
+            >
+              <div
+                style={{
+                  width: "45%",
+                  height: "100%",
+                  background:
+                    "linear-gradient(90deg, transparent, #60a5fa, transparent)",
+                  animation: "progress 1.4s linear infinite"
+                }}
+              />
+            </div>
+
+            <p
+              style={{
+                color: "#94a3b8",
+                fontSize: 14,
+                marginTop: 20,
+                marginBottom: 0
+              }}
+            >
+              Non chiudere la pagina durante l’elaborazione.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <div style={{ marginBottom: 40 }}>
@@ -272,7 +411,10 @@ export default function Home() {
                 padding: "16px 28px",
                 fontSize: 18,
                 fontWeight: "bold",
-                cursor: loading || ocrLoading || !text.trim() ? "not-allowed" : "pointer",
+                cursor:
+                  loading || ocrLoading || !text.trim()
+                    ? "not-allowed"
+                    : "pointer",
                 display: "flex",
                 alignItems: "center",
                 gap: 10
@@ -333,27 +475,6 @@ export default function Home() {
               Cancella storico
             </button>
           </div>
-
-          {loading && (
-            <div
-              style={{
-                marginTop: 24,
-                background: "#0f172a",
-                border: "1px solid #334155",
-                borderRadius: 16,
-                padding: 18,
-                color: "#cbd5e1"
-              }}
-            >
-              <strong style={{ color: "#93c5fd" }}>
-                Operazione in corso
-              </strong>
-              <p style={{ marginBottom: 0 }}>
-                L’AI sta analizzando il contenuto, valutando linguaggio,
-                contesto e possibili aree delle policy Meta coinvolte.
-              </p>
-            </div>
-          )}
         </div>
 
         {result && (
