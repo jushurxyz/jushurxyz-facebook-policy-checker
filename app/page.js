@@ -5,6 +5,7 @@ import Tesseract from "tesseract.js";
 
 export default function Home() {
   const [text, setText] = useState("");
+  const [context, setContext] = useState("");
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
@@ -14,10 +15,7 @@ export default function Home() {
 
   useEffect(() => {
     const saved = localStorage.getItem("policy_checker_history");
-
-    if (saved) {
-      setHistory(JSON.parse(saved));
-    }
+    if (saved) setHistory(JSON.parse(saved));
   }, []);
 
   useEffect(() => {
@@ -33,7 +31,6 @@ export default function Home() {
     ];
 
     let index = 0;
-
     const interval = setInterval(() => {
       index = (index + 1) % steps.length;
       setAnalysisStep(steps[index]);
@@ -46,38 +43,26 @@ export default function Home() {
     const lower = result.toLowerCase();
 
     if (lower.includes("alto")) {
-      return {
-        label: "RISCHIO ALTO",
-        color: "#dc2626",
-        background: "#7f1d1d"
-      };
+      return { label: "RISCHIO ALTO", color: "#dc2626", background: "#7f1d1d" };
     }
 
     if (lower.includes("medio")) {
-      return {
-        label: "RISCHIO MEDIO",
-        color: "#f59e0b",
-        background: "#78350f"
-      };
+      return { label: "RISCHIO MEDIO", color: "#f59e0b", background: "#78350f" };
     }
 
-    return {
-      label: "RISCHIO BASSO",
-      color: "#22c55e",
-      background: "#14532d"
-    };
+    return { label: "RISCHIO BASSO", color: "#22c55e", background: "#14532d" };
   }, [result]);
 
-  function saveToHistory(content, analysis) {
+  function saveToHistory(content, contextText, analysis) {
     const newEntry = {
       id: Date.now(),
       date: new Date().toLocaleString(),
       content,
+      context: contextText,
       analysis
     };
 
     const updatedHistory = [newEntry, ...history];
-
     setHistory(updatedHistory);
 
     localStorage.setItem(
@@ -97,15 +82,14 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ text, context })
       });
 
       const data = await response.json();
-
       const analysisResult = data.result || "Nessun risultato.";
 
       setResult(analysisResult);
-      saveToHistory(text, analysisResult);
+      saveToHistory(text, context, analysisResult);
     } catch (error) {
       setResult("Errore durante la richiesta.");
     }
@@ -115,7 +99,6 @@ export default function Home() {
 
   async function handleImageUpload(event) {
     const file = event.target.files[0];
-
     if (!file) return;
 
     setOcrLoading(true);
@@ -137,17 +120,13 @@ export default function Home() {
       if (extractedText) {
         setText((prev) =>
           prev
-            ? prev +
-              "\n\n--- Testo estratto dallo screenshot ---\n" +
-              extractedText
+            ? prev + "\n\n--- Testo estratto dallo screenshot ---\n" + extractedText
             : extractedText
         );
 
         setOcrProgress("Testo estratto correttamente.");
       } else {
-        setOcrProgress(
-          "Non è stato trovato testo leggibile nello screenshot."
-        );
+        setOcrProgress("Non è stato trovato testo leggibile nello screenshot.");
       }
     } catch (error) {
       setOcrProgress("Errore durante la lettura dello screenshot.");
@@ -183,37 +162,19 @@ export default function Home() {
     >
       <style jsx global>{`
         @keyframes spin {
-          0% {
-            transform: rotate(0deg);
-          }
-
-          100% {
-            transform: rotate(360deg);
-          }
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
 
         @keyframes progress {
-          0% {
-            transform: translateX(-100%);
-          }
-
-          100% {
-            transform: translateX(220%);
-          }
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(220%); }
         }
 
         @keyframes pulseGlow {
-          0% {
-            box-shadow: 0 0 20px rgba(37, 99, 235, 0.25);
-          }
-
-          50% {
-            box-shadow: 0 0 45px rgba(37, 99, 235, 0.75);
-          }
-
-          100% {
-            box-shadow: 0 0 20px rgba(37, 99, 235, 0.25);
-          }
+          0% { box-shadow: 0 0 20px rgba(37, 99, 235, 0.25); }
+          50% { box-shadow: 0 0 45px rgba(37, 99, 235, 0.75); }
+          100% { box-shadow: 0 0 20px rgba(37, 99, 235, 0.25); }
         }
       `}</style>
 
@@ -403,6 +364,18 @@ export default function Home() {
 
           {ocrProgress && <p style={{ color: "#93c5fd" }}>{ocrProgress}</p>}
 
+          <label
+            style={{
+              display: "block",
+              marginTop: 24,
+              marginBottom: 12,
+              fontSize: 18,
+              fontWeight: "bold"
+            }}
+          >
+            Contenuto da analizzare
+          </label>
+
           <textarea
             style={{
               width: "100%",
@@ -420,6 +393,37 @@ export default function Home() {
             placeholder="Incolla qui il contenuto Facebook..."
             value={text}
             onChange={(e) => setText(e.target.value)}
+          />
+
+          <label
+            style={{
+              display: "block",
+              marginTop: 22,
+              marginBottom: 12,
+              fontSize: 18,
+              fontWeight: "bold"
+            }}
+          >
+            Contesto / spiegazione facoltativa
+          </label>
+
+          <textarea
+            style={{
+              width: "100%",
+              minHeight: 120,
+              background: "#0f172a",
+              color: "white",
+              border: "1px solid #334155",
+              borderRadius: 16,
+              padding: 20,
+              fontSize: 18,
+              resize: "vertical",
+              outline: "none",
+              boxSizing: "border-box"
+            }}
+            placeholder="Aggiungi eventuale contesto utile per l’AI: dove è stato pubblicato il contenuto, tono della conversazione, intento satirico, rapporto tra gli utenti, minacce precedenti, ecc..."
+            value={context}
+            onChange={(e) => setContext(e.target.value)}
           />
 
           <div
@@ -470,6 +474,7 @@ export default function Home() {
             <button
               onClick={() => {
                 setText("");
+                setContext("");
                 setResult("");
                 setOcrProgress("");
               }}
@@ -654,6 +659,24 @@ export default function Home() {
                   >
                     {item.content}
                   </div>
+
+                  {item.context && (
+                    <div
+                      style={{
+                        marginBottom: 18,
+                        color: "#fde68a",
+                        background: "rgba(245, 158, 11, 0.08)",
+                        border: "1px solid rgba(245, 158, 11, 0.25)",
+                        borderRadius: 12,
+                        padding: 14,
+                        whiteSpace: "pre-wrap"
+                      }}
+                    >
+                      <strong>Contesto fornito:</strong>
+                      <br />
+                      {item.context}
+                    </div>
+                  )}
 
                   <div
                     style={{
