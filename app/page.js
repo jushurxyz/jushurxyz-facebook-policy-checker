@@ -12,6 +12,7 @@ export default function Home() {
   const [ocrProgress, setOcrProgress] = useState("");
   const [history, setHistory] = useState([]);
   const [analysisStep, setAnalysisStep] = useState("Preparazione analisi...");
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("policy_checker_history");
@@ -286,44 +287,72 @@ export default function Home() {
           <div
             style={{
               marginTop: 24,
-              background: "rgba(245, 158, 11, 0.12)",
-              border: "1px solid rgba(245, 158, 11, 0.35)",
-              borderRadius: 16,
-              padding: 18,
               maxWidth: 900
             }}
           >
-            <div
+            <button
+              onClick={() => setShowDisclaimer(!showDisclaimer)}
               style={{
+                width: "100%",
+                background: "rgba(245, 158, 11, 0.12)",
+                border: "1px solid rgba(245, 158, 11, 0.35)",
+                borderRadius: 16,
+                padding: 18,
                 color: "#fbbf24",
-                fontWeight: "bold",
-                marginBottom: 10,
-                fontSize: 16
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                cursor: "pointer",
+                fontSize: 16,
+                fontWeight: "bold"
               }}
             >
-              Disclaimer legale
-            </div>
+              <span>Disclaimer legale</span>
 
-            <div
-              style={{
-                color: "#fde68a",
-                lineHeight: 1.7,
-                fontSize: 15
-              }}
-            >
-              Questa applicazione fornisce esclusivamente un’analisi preliminare
-              automatizzata basata su modelli di intelligenza artificiale e non
-              rappresenta una valutazione ufficiale di Meta/Facebook.
-              <br />
-              <br />
-              L’eventuale presenza di contenuti potenzialmente problematici non
-              implica necessariamente una violazione effettiva delle Regole della
-              Community.
-              <br />
-              <br />
-              Solo Meta Platforms può stabilire ufficialmente se un contenuto
-              viola le proprie policy o richiede interventi di moderazione.
-            </div>
+              <span
+                style={{
+                  fontSize: 24,
+                  lineHeight: 1
+                }}
+              >
+                {showDisclaimer ? "−" : "+"}
+              </span>
+            </button>
+
+            {showDisclaimer && (
+              <div
+                style={{
+                  marginTop: 10,
+                  background: "rgba(245, 158, 11, 0.08)",
+                  border: "1px solid rgba(245, 158, 11, 0.25)",
+                  borderRadius: 16,
+                  padding: 20
+                }}
+              >
+                <div
+                  style={{
+                    color: "#fde68a",
+                    lineHeight: 1.7,
+                    fontSize: 15
+                  }}
+                >
+                  Questa applicazione fornisce esclusivamente un’analisi
+                  preliminare automatizzata basata su modelli di intelligenza
+                  artificiale e non rappresenta una valutazione ufficiale di
+                  Meta/Facebook.
+                  <br />
+                  <br />
+                  L’eventuale presenza di contenuti potenzialmente problematici
+                  non implica necessariamente una violazione effettiva delle
+                  Regole della Community.
+                  <br />
+                  <br />
+                  Solo Meta Platforms può stabilire ufficialmente se un
+                  contenuto viola le proprie policy o richiede interventi di
+                  moderazione.
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
