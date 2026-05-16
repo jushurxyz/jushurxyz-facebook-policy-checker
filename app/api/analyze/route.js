@@ -1,6 +1,6 @@
 export async function POST(request) {
   try {
-    const { text } = await request.json();
+    const { text, context } = await request.json();
 
     if (!text || text.trim().length < 5) {
       return Response.json({
@@ -10,7 +10,8 @@ export async function POST(request) {
 
     if (!process.env.OPENROUTER_API_KEY) {
       return Response.json({
-        result: "ERRORE: la variabile OPENROUTER_API_KEY non risulta configurata su Vercel."
+        result:
+          "ERRORE: la variabile OPENROUTER_API_KEY non risulta configurata su Vercel."
       });
     }
 
@@ -24,6 +25,10 @@ IMPORTANTE:
 - Non inventare norme inesistenti.
 - Rispondi sempre in italiano.
 - Il tono deve essere professionale, prudente e chiaro.
+- Usa il contesto fornito dall'utente solo per interpretare meglio il contenuto, ma non assumerlo come prova assoluta.
+
+Contesto fornito dall'utente:
+"${context || "Nessun contesto aggiuntivo fornito."}"
 
 Analizza questo contenuto:
 
@@ -57,6 +62,9 @@ Basso / Medio / Alto
 ELEMENTI PROBLEMATICI
 Riporta solo brevi estratti o descrizioni degli elementi problematici.
 
+CONTESTO CONSIDERATO
+Spiega brevemente se e come il contesto fornito dall'utente ha influenzato l'analisi.
+
 NORMA META POTENZIALMENTE COINVOLTA
 Descrivi in modo prudente la possibile area delle Regole della Community interessata.
 
@@ -77,7 +85,7 @@ Ricorda che solo Meta può stabilire ufficialmente se il contenuto viola le prop
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
         "HTTP-Referer": "https://facebook-policy-checker.vercel.app",
         "X-Title": "Facebook Policy Checker"
@@ -106,7 +114,6 @@ Ricorda che solo Meta può stabilire ufficialmente se il contenuto viola le prop
       "Nessuna risposta ricevuta dal modello.";
 
     return Response.json({ result: output });
-
   } catch (error) {
     return Response.json({
       result: "ERRORE REALE: " + error.message
