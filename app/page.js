@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Tesseract from "tesseract.js";
 
 export default function Home() {
   const [text, setText] = useState("");
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState("");
 
   async function analyzeContent() {
     setLoading(true);
@@ -21,13 +24,48 @@ export default function Home() {
       });
 
       const data = await response.json();
-
       setResult(data.result || "Nessun risultato.");
     } catch (error) {
       setResult("Errore durante la richiesta.");
     }
 
     setLoading(false);
+  }
+
+  async function handleImageUpload(event) {
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    setOcrLoading(true);
+    setOcrProgress("Lettura immagine in corso...");
+
+    try {
+      const ocrResult = await Tesseract.recognize(file, "ita+eng", {
+        logger: (m) => {
+          if (m.status === "recognizing text") {
+            setOcrProgress(`Riconoscimento testo: ${Math.round(m.progress * 100)}%`);
+          }
+        }
+      });
+
+      const extractedText = ocrResult.data.text.trim();
+
+      if (extractedText) {
+        setText((prev) =>
+          prev
+            ? prev + "\n\n--- Testo estratto dallo screenshot ---\n" + extractedText
+            : extractedText
+        );
+        setOcrProgress("Testo estratto correttamente.");
+      } else {
+        setOcrProgress("Non è stato trovato testo leggibile nello screenshot.");
+      }
+    } catch (error) {
+      setOcrProgress("Errore durante la lettura dello screenshot.");
+    }
+
+    setOcrLoading(false);
   }
 
   return (
@@ -40,37 +78,15 @@ export default function Home() {
         padding: "40px 20px"
       }}
     >
-      <div
-        style={{
-          maxWidth: 1000,
-          margin: "0 auto"
-        }}
-      >
-        <div
-          style={{
-            marginBottom: 40
-          }}
-        >
-          <h1
-            style={{
-              fontSize: 48,
-              marginBottom: 10,
-              fontWeight: "bold"
-            }}
-          >
+      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+        <div style={{ marginBottom: 40 }}>
+          <h1 style={{ fontSize: 48, marginBottom: 10, fontWeight: "bold" }}>
             Facebook Policy Checker
           </h1>
 
-          <p
-            style={{
-              fontSize: 20,
-              color: "#cbd5e1",
-              maxWidth: 700,
-              lineHeight: 1.5
-            }}
-          >
-            Analizza contenuti Facebook e rileva possibili violazioni delle
-            Regole della Community Meta tramite AI.
+          <p style={{ fontSize: 20, color: "#cbd5e1", maxWidth: 760, lineHeight: 1.5 }}>
+            Incolla un testo o carica uno screenshot Facebook. L’app estrarrà il testo e analizzerà
+            possibili violazioni delle Regole della Community Meta.
           </p>
         </div>
 
@@ -82,6 +98,51 @@ export default function Home() {
             boxShadow: "0 10px 30px rgba(0,0,0,0.4)"
           }}
         >
+          <label
+            style={{
+              display: "block",
+              marginBottom: 12,
+              fontSize: 18,
+              fontWeight: "bold"
+            }}
+          >
+            Carica screenshot
+          </label>
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            disabled={ocrLoading}
+            style={{
+              width: "100%",
+              marginBottom: 16,
+              padding: 14,
+              background: "#0f172a",
+              color: "white",
+              border: "1px solid #334155",
+              borderRadius: 12
+            }}
+          />
+
+          {ocrProgress && (
+            <p style={{ color: "#93c5fd", marginTop: 0 }}>
+              {ocrProgress}
+            </p>
+          )}
+
+          <label
+            style={{
+              display: "block",
+              marginTop: 24,
+              marginBottom: 12,
+              fontSize: 18,
+              fontWeight: "bold"
+            }}
+          >
+            Testo da analizzare
+          </label>
+
           <textarea
             style={{
               width: "100%",
@@ -96,29 +157,49 @@ export default function Home() {
               outline: "none",
               boxSizing: "border-box"
             }}
-            placeholder="Incolla qui il contenuto Facebook da analizzare..."
+            placeholder="Incolla qui il contenuto Facebook oppure carica uno screenshot..."
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
 
-          <button
-            onClick={analyzeContent}
-            disabled={loading || !text.trim()}
-            style={{
-              marginTop: 20,
-              background: loading ? "#475569" : "#2563eb",
-              color: "white",
-              border: "none",
-              borderRadius: 14,
-              padding: "16px 28px",
-              fontSize: 18,
-              fontWeight: "bold",
-              cursor: "pointer",
-              transition: "0.2s"
-            }}
-          >
-            {loading ? "Analisi in corso..." : "Analizza contenuto"}
-          </button>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
+            <button
+              onClick={analyzeContent}
+              disabled={loading || ocrLoading || !text.trim()}
+              style={{
+                background: loading ? "#475569" : "#2563eb",
+                color: "white",
+                border: "none",
+                borderRadius: 14,
+                padding: "16px 28px",
+                fontSize: 18,
+                fontWeight: "bold",
+                cursor: "pointer"
+              }}
+            >
+              {loading ? "Analisi in corso..." : "Analizza contenuto"}
+            </button>
+
+            <button
+              onClick={() => {
+                setText("");
+                setResult("");
+                setOcrProgress("");
+              }}
+              style={{
+                background: "#334155",
+                color: "white",
+                border: "none",
+                borderRadius: 14,
+                padding: "16px 28px",
+                fontSize: 18,
+                fontWeight: "bold",
+                cursor: "pointer"
+              }}
+            >
+              Pulisci
+            </button>
+          </div>
         </div>
 
         {result && (
@@ -131,32 +212,9 @@ export default function Home() {
               boxShadow: "0 10px 30px rgba(0,0,0,0.4)"
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                marginBottom: 20
-              }}
-            >
-              <div
-                style={{
-                  width: 14,
-                  height: 14,
-                  borderRadius: "50%",
-                  background: "#22c55e"
-                }}
-              />
-
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: 32
-                }}
-              >
-                Risultato analisi
-              </h2>
-            </div>
+            <h2 style={{ marginTop: 0, fontSize: 32 }}>
+              Risultato analisi
+            </h2>
 
             <div
               style={{
@@ -170,54 +228,6 @@ export default function Home() {
             </div>
           </div>
         )}
-
-        <div
-          style={{
-            marginTop: 50,
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 20
-          }}
-        >
-          <div
-            style={{
-              background: "#1e293b",
-              padding: 24,
-              borderRadius: 18
-            }}
-          >
-            <h3>AI Moderation</h3>
-            <p style={{ color: "#94a3b8" }}>
-              Analisi intelligente di testi e contenuti social.
-            </p>
-          </div>
-
-          <div
-            style={{
-              background: "#1e293b",
-              padding: 24,
-              borderRadius: 18
-            }}
-          >
-            <h3>Meta Policies</h3>
-            <p style={{ color: "#94a3b8" }}>
-              Rilevazione di possibili violazioni Community Standards.
-            </p>
-          </div>
-
-          <div
-            style={{
-              background: "#1e293b",
-              padding: 24,
-              borderRadius: 18
-            }}
-          >
-            <h3>Risk Detection</h3>
-            <p style={{ color: "#94a3b8" }}>
-              Valutazione del livello di rischio dei contenuti.
-            </p>
-          </div>
-        </div>
       </div>
     </main>
   );
