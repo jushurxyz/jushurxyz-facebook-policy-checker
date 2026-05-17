@@ -1,10 +1,11 @@
 export async function POST(request) {
   try {
-    const { sourceUrl, text, context } = await request.json();
+    const { sourceUrl, text, context, imageData, imageName, ocrText } =
+      await request.json();
 
-    if (!text || text.trim().length < 5) {
+    if ((!text || text.trim().length < 5) && !imageData) {
       return Response.json({
-        result: "Inserisci un testo più completo da analizzare."
+        result: "Inserisci un testo da analizzare oppure carica un’immagine."
       });
     }
 
@@ -20,23 +21,29 @@ Sei un assistente specializzato nell'analisi preliminare di contenuti Facebook r
 
 IMPORTANTE:
 - Non dichiarare mai che una violazione è certa.
-- Usa sempre formule come "possibile violazione", "potenzialmente problematico", "richiede revisione".
+- Usa formule come "possibile violazione", "potenzialmente problematico", "richiede revisione".
 - Non fingere di rappresentare Meta o Facebook.
 - Non inventare norme inesistenti.
 - Rispondi sempre in italiano.
 - Il tono deve essere professionale, prudente e chiaro.
-- Usa il contesto fornito dall'utente solo per interpretare meglio il contenuto, ma non assumerlo come prova assoluta.
-- L'URL fornito dall'utente è solo un riferimento. Non devi fingere di aver visitato o letto direttamente il link.
+- L'URL fornito è solo un riferimento: non fingere di averlo visitato.
+- Se è presente un'immagine, analizza anche il contenuto visivo: soggetti, testo visibile, simboli, gesti, violenza, nudità, armi, contenuti offensivi o potenzialmente problematici.
+- Se è presente OCR, usalo solo come supporto perché potrebbe contenere errori.
 
-URL di origine fornito dall'utente:
+URL di origine:
 "${sourceUrl || "Nessun URL fornito."}"
+
+Nome immagine:
+"${imageName || "Nessuna immagine caricata."}"
 
 Contesto fornito dall'utente:
 "${context || "Nessun contesto aggiuntivo fornito."}"
 
-Analizza questo contenuto:
+Testo inserito manualmente:
+"${text || "Nessun testo manuale inserito."}"
 
-"${text}"
+Testo OCR di supporto:
+"${ocrText || "Nessun testo OCR disponibile."}"
 
 Restituisci un report strutturato in questo formato:
 
@@ -66,6 +73,12 @@ Basso / Medio / Alto
 ELEMENTI PROBLEMATICI
 Riporta solo brevi estratti o descrizioni degli elementi problematici.
 
+ANALISI VISIVA
+Se è presente un'immagine, descrivi cosa appare e quali elementi visivi sono rilevanti.
+
+TESTO RILEVATO NELL'IMMAGINE
+Se è presente OCR o testo visibile nell'immagine, riassumi solo le parti utili.
+
 URL DI ORIGINE
 Riporta l'URL fornito, specificando che è stato usato solo come riferimento e non letto automaticamente.
 
@@ -89,24 +102,43 @@ AVVERTENZA
 Ricorda che solo Meta può stabilire ufficialmente se il contenuto viola le proprie regole.
 `;
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://facebook-policy-checker.vercel.app",
-        "X-Title": "Facebook Policy Checker"
-      },
-      body: JSON.stringify({
-        model: "openrouter/free",
-        messages: [
-          {
-            role: "user",
-            content: prompt
-          }
-        ]
-      })
-    });
+    const messageContent = [
+      {
+        type: "text",
+        text: prompt
+      }
+    ];
+
+    if (imageData) {
+      messageContent.push({
+        type: "image_url",
+        image_url: {
+          url: imageData
+        }
+      });
+    }
+
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://facebook-policy-checker.vercel.app",
+          "X-Title": "Facebook Policy Checker"
+        },
+        body: JSON.stringify({
+          model: "openrouter/free",
+          messages: [
+            {
+              role: "user",
+              content: messageContent
+            }
+          ]
+        })
+      }
+    );
 
     const data = await response.json();
 
