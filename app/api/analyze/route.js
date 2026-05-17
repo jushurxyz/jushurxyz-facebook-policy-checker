@@ -1,11 +1,18 @@
 export async function POST(request) {
   try {
-    const { sourceUrl, text, context, imageData, imageName, ocrText } =
-      await request.json();
+    const {
+      sourceUrl,
+      text,
+      context,
+      imageData,
+      imageName,
+      ocrText
+    } = await request.json();
 
     if ((!text || text.trim().length < 5) && !imageData) {
       return Response.json({
-        result: "Inserisci un testo da analizzare oppure carica un’immagine."
+        result:
+          "Inserisci un testo da analizzare oppure carica un’immagine."
       });
     }
 
@@ -27,7 +34,15 @@ IMPORTANTE:
 - Rispondi sempre in italiano.
 - Il tono deve essere professionale, prudente e chiaro.
 - L'URL fornito è solo un riferimento: non fingere di averlo visitato.
-- Se è presente un'immagine, analizza anche il contenuto visivo: soggetti, testo visibile, simboli, gesti, violenza, nudità, armi, contenuti offensivi o potenzialmente problematici.
+- Se è presente un'immagine, analizza anche il contenuto visivo:
+  soggetti,
+  testo visibile,
+  simboli,
+  gesti,
+  violenza,
+  nudità,
+  armi,
+  contenuti offensivi o potenzialmente problematici.
 - Se è presente OCR, usalo solo come supporto perché potrebbe contenere errori.
 
 URL di origine:
@@ -125,11 +140,13 @@ Ricorda che solo Meta può stabilire ufficialmente se il contenuto viola le prop
         headers: {
           Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
-          "HTTP-Referer": "https://facebook-policy-checker.vercel.app",
-          "X-Title": "Facebook Policy Checker"
+          "HTTP-Referer":
+            "https://facebook-policy-checker.vercel.app",
+          "X-Title":
+            "Facebook Policy Checker"
         },
         body: JSON.stringify({
-          model: "openrouter/free",
+          model: "google/gemma-4-31b-it:free",
           messages: [
             {
               role: "user",
@@ -144,7 +161,9 @@ Ricorda che solo Meta può stabilire ufficialmente se il contenuto viola le prop
 
     if (!response.ok) {
       return Response.json({
-        result: "ERRORE OPENROUTER: " + JSON.stringify(data)
+        result:
+          "ERRORE OPENROUTER: " +
+          JSON.stringify(data)
       });
     }
 
@@ -152,10 +171,14 @@ Ricorda che solo Meta può stabilire ufficialmente se il contenuto viola le prop
       data.choices?.[0]?.message?.content ||
       "Nessuna risposta ricevuta dal modello.";
 
-    return Response.json({ result: output });
+    return Response.json({
+      result: output
+    });
   } catch (error) {
     return Response.json({
-      result: "ERRORE REALE: " + error.message
+      result:
+        "ERRORE REALE: " +
+        error.message
     });
   }
 }
