@@ -15,16 +15,11 @@ export default function Home() {
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrProgress, setOcrProgress] = useState("");
   const [history, setHistory] = useState([]);
-  const [analysisStep, setAnalysisStep] = useState(
-    "Preparazione analisi..."
-  );
+  const [analysisStep, setAnalysisStep] = useState("Preparazione analisi...");
   const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem(
-      "policy_checker_history"
-    );
-
+    const saved = localStorage.getItem("policy_checker_history");
     if (saved) {
       setHistory(JSON.parse(saved));
     }
@@ -36,10 +31,9 @@ export default function Home() {
     const steps = [
       "Preparazione analisi...",
       "Controllo linguaggio e tono...",
-      "Valutazione possibili violazioni...",
       "Analisi visiva dell’immagine...",
+      "Valutazione possibili violazioni...",
       "Confronto con aree policy Meta...",
-      "Calcolo livello di rischio...",
       "Generazione report finale..."
     ];
 
@@ -82,97 +76,52 @@ export default function Home() {
   function renderLinkedReport(report) {
     const policyLinks = [
       {
-        keywords: [
-          "bullismo",
-          "molestie",
-          "harassment"
-        ],
-        url:
-          "https://transparency.meta.com/policies/community-standards/bullying-harassment/"
+        keywords: ["bullismo", "molestie", "harassment"],
+        url: "https://transparency.meta.com/policies/community-standards/bullying-harassment/"
       },
       {
-        keywords: [
-          "odio",
-          "hate",
-          "incitamento all'odio"
-        ],
-        url:
-          "https://transparency.meta.com/policies/community-standards/hateful-conduct/"
+        keywords: ["odio", "hate", "incitamento all'odio"],
+        url: "https://transparency.meta.com/policies/community-standards/hateful-conduct/"
       },
       {
-        keywords: [
-          "violenza",
-          "minacce",
-          "violence"
-        ],
-        url:
-          "https://transparency.meta.com/policies/community-standards/violence-incitement/"
+        keywords: ["violenza", "minacce", "violence"],
+        url: "https://transparency.meta.com/policies/community-standards/violence-incitement/"
       },
       {
-        keywords: [
-          "nudità",
-          "contenuti sessuali",
-          "sessuali"
-        ],
-        url:
-          "https://transparency.meta.com/policies/community-standards/adult-nudity-sexual-activity/"
+        keywords: ["nudità", "contenuti sessuali", "sessuali"],
+        url: "https://transparency.meta.com/policies/community-standards/adult-nudity-sexual-activity/"
       },
       {
-        keywords: [
-          "autolesionismo",
-          "suicidio"
-        ],
-        url:
-          "https://transparency.meta.com/policies/community-standards/suicide-self-injury/"
+        keywords: ["autolesionismo", "suicidio"],
+        url: "https://transparency.meta.com/policies/community-standards/suicide-self-injury/"
       },
       {
-        keywords: [
-          "privacy",
-          "dati personali"
-        ],
-        url:
-          "https://transparency.meta.com/policies/community-standards/privacy-violations/"
+        keywords: ["privacy", "dati personali"],
+        url: "https://transparency.meta.com/policies/community-standards/privacy-violations/"
       },
       {
-        keywords: [
-          "spam",
-          "truffa",
-          "frode"
-        ],
-        url:
-          "https://transparency.meta.com/policies/community-standards/spam/"
+        keywords: ["spam", "truffa", "frode"],
+        url: "https://transparency.meta.com/policies/community-standards/spam/"
       }
     ];
 
     let linkedText = report;
 
     policyLinks.forEach((policy) => {
-      policy.keywords.forEach(
-        (keyword) => {
-          const regex = new RegExp(
-            `(${keyword})`,
-            "gi"
-          );
+      policy.keywords.forEach((keyword) => {
+        const regex = new RegExp(`(${keyword})`, "gi");
 
-          linkedText =
-            linkedText.replace(
-              regex,
-              `<a href="${policy.url}" target="_blank" rel="noopener noreferrer" style="color:#93c5fd;text-decoration:underline;">$1</a>`
-            );
-        }
-      );
+        linkedText = linkedText.replace(
+          regex,
+          `<a href="${policy.url}" target="_blank" rel="noopener noreferrer" style="color:#93c5fd;text-decoration:underline;">$1</a>`
+        );
+      });
     });
 
     return linkedText;
   }
 
-  function saveToHistory(
-    url,
-    content,
-    contextText,
-    imageFileName,
-    analysis
-  ) {
+  function saveToHistory(url, content, contextText, imageFileName, analysis) {
     const newEntry = {
       id: Date.now(),
       date: new Date().toLocaleString(),
@@ -183,10 +132,7 @@ export default function Home() {
       analysis
     };
 
-    const updatedHistory = [
-      newEntry,
-      ...history
-    ];
+    const updatedHistory = [newEntry, ...history];
 
     setHistory(updatedHistory);
 
@@ -197,115 +143,80 @@ export default function Home() {
   }
 
   async function analyzeContent() {
+    if (loading || ocrLoading) return;
+
+    if (!text.trim() && !imageData) {
+      setResult("Inserisci un testo da analizzare oppure carica un’immagine.");
+      return;
+    }
+
     setLoading(true);
     setResult("");
-    setAnalysisStep(
-      "Preparazione analisi..."
-    );
+    setAnalysisStep("Preparazione analisi...");
 
     try {
-      const response = await fetch(
-        "/api/analyze",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
-          body: JSON.stringify({
-            sourceUrl,
-            text,
-            context,
-            imageData,
-            imageName,
-            ocrText
-          })
-        }
-      );
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          sourceUrl,
+          text,
+          context,
+          imageData,
+          imageName,
+          ocrText
+        })
+      });
 
       const data = await response.json();
 
-      const analysisResult =
-        data.result ||
-        "Nessun risultato.";
+      const analysisResult = data.result || "Nessun risultato ricevuto.";
 
       setResult(analysisResult);
-
-      saveToHistory(
-        sourceUrl,
-        text,
-        context,
-        imageName,
-        analysisResult
-      );
+      saveToHistory(sourceUrl, text, context, imageName, analysisResult);
     } catch (error) {
-      setResult(
-        "Errore durante la richiesta."
-      );
+      setResult("Errore durante la richiesta.");
     }
 
     setLoading(false);
   }
 
-  async function handleImageUpload(
-    event
-  ) {
-    const file =
-      event.target.files[0];
+  async function handleImageUpload(event) {
+    const file = event.target.files[0];
 
     if (!file) return;
 
     setImageName(file.name);
     setOcrLoading(true);
+    setOcrProgress("Caricamento immagine e lettura testo di supporto...");
 
-    setOcrProgress(
-      "Caricamento immagine e lettura testo di supporto..."
-    );
-
-    const reader =
-      new FileReader();
+    const reader = new FileReader();
 
     reader.onload = async () => {
-      const base64Image =
-        reader.result;
-
+      const base64Image = reader.result;
       setImageData(base64Image);
 
       try {
-        const ocrResult =
-          await Tesseract.recognize(
-            file,
-            "ita+eng",
-            {
-              logger: (m) => {
-                if (
-                  m.status ===
-                  "recognizing text"
-                ) {
-                  setOcrProgress(
-                    `OCR di supporto: ${Math.round(
-                      m.progress *
-                        100
-                    )}%`
-                  );
-                }
-              }
+        const ocrResult = await Tesseract.recognize(file, "ita+eng", {
+          logger: (m) => {
+            if (m.status === "recognizing text") {
+              setOcrProgress(
+                `OCR di supporto: ${Math.round(m.progress * 100)}%`
+              );
             }
-          );
+          }
+        });
 
-        const extractedText =
-          ocrResult.data.text.trim();
-
-        setOcrText(
-          extractedText || ""
-        );
+        const extractedText = ocrResult.data.text.trim();
+        setOcrText(extractedText || "");
 
         setOcrProgress(
           "Immagine caricata correttamente. L’AI analizzerà anche il contenuto visivo."
         );
       } catch (error) {
         setOcrText("");
-
         setOcrProgress(
           "Immagine caricata. OCR non disponibile, ma l’AI Vision analizzerà comunque la foto."
         );
@@ -317,27 +228,28 @@ export default function Home() {
     reader.readAsDataURL(file);
   }
 
-  function clearHistory() {
-    localStorage.removeItem(
-      "policy_checker_history"
-    );
+  function clearForm() {
+    setSourceUrl("");
+    setText("");
+    setContext("");
+    setImageData("");
+    setImageName("");
+    setOcrText("");
+    setResult("");
+    setOcrProgress("");
+  }
 
+  function clearHistory() {
+    localStorage.removeItem("policy_checker_history");
     setHistory([]);
   }
 
   async function copyReport() {
     try {
-      await navigator.clipboard.writeText(
-        result
-      );
-
-      alert(
-        "Report copiato negli appunti."
-      );
+      await navigator.clipboard.writeText(result);
+      alert("Report copiato negli appunti.");
     } catch (error) {
-      alert(
-        "Errore durante la copia."
-      );
+      alert("Errore durante la copia.");
     }
   }
 
@@ -347,218 +259,311 @@ export default function Home() {
         minHeight: "100vh",
         background: "#0f172a",
         color: "white",
-        fontFamily:
-          "Arial, sans-serif",
-        padding: "40px 20px"
+        fontFamily: "Arial, sans-serif",
+        padding: "40px 20px",
+        position: "relative"
       }}
     >
-      <div
-        style={{
-          maxWidth: 1100,
-          margin: "0 auto"
-        }}
-      >
-        <h1
-          style={{
-            fontSize: 48,
-            marginBottom: 10
-          }}
-        >
-          Facebook Policy Checker
-        </h1>
+      <style jsx global>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
 
-        <p
+        @keyframes progress {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(220%); }
+        }
+
+        @keyframes pulseGlow {
+          0% { box-shadow: 0 0 20px rgba(37, 99, 235, 0.25); }
+          50% { box-shadow: 0 0 45px rgba(37, 99, 235, 0.75); }
+          100% { box-shadow: 0 0 20px rgba(37, 99, 235, 0.25); }
+        }
+      `}</style>
+
+      {loading && (
+        <div
           style={{
-            color: "#cbd5e1",
-            fontSize: 20,
-            lineHeight: 1.5,
-            marginBottom: 30
+            position: "fixed",
+            inset: 0,
+            background: "rgba(2, 6, 23, 0.82)",
+            backdropFilter: "blur(6px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20
           }}
         >
-          Analizza contenuti
-          Facebook, immagini e
-          screenshot per
-          individuare possibili
-          violazioni delle
-          Community Standards
-          Meta.
-        </p>
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 520,
+              background: "#1e293b",
+              border: "1px solid #334155",
+              borderRadius: 28,
+              padding: 34,
+              textAlign: "center",
+              animation: "pulseGlow 2s infinite"
+            }}
+          >
+            <div
+              style={{
+                width: 72,
+                height: 72,
+                border: "6px solid rgba(255,255,255,0.18)",
+                borderTop: "6px solid #60a5fa",
+                borderRadius: "50%",
+                animation: "spin 1s linear infinite",
+                margin: "0 auto 24px"
+              }}
+            />
+
+            <h2 style={{ fontSize: 30, margin: "0 0 12px" }}>
+              Analisi AI in corso
+            </h2>
+
+            <p
+              style={{
+                color: "#cbd5e1",
+                fontSize: 18,
+                lineHeight: 1.5,
+                marginBottom: 24
+              }}
+            >
+              {analysisStep}
+            </p>
+
+            <div
+              style={{
+                height: 10,
+                background: "#0f172a",
+                borderRadius: 999,
+                overflow: "hidden",
+                border: "1px solid #334155"
+              }}
+            >
+              <div
+                style={{
+                  width: "45%",
+                  height: "100%",
+                  background:
+                    "linear-gradient(90deg, transparent, #60a5fa, transparent)",
+                  animation: "progress 1.4s linear infinite"
+                }}
+              />
+            </div>
+
+            <p
+              style={{
+                color: "#94a3b8",
+                fontSize: 14,
+                marginTop: 20,
+                marginBottom: 0
+              }}
+            >
+              Non chiudere la pagina durante l’elaborazione.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <div style={{ marginBottom: 40 }}>
+          <h1 style={{ fontSize: 48, marginBottom: 10, fontWeight: "bold" }}>
+            Facebook Policy Checker
+          </h1>
+
+          <p
+            style={{
+              fontSize: 20,
+              color: "#cbd5e1",
+              maxWidth: 760,
+              lineHeight: 1.5
+            }}
+          >
+            Analizza contenuti Facebook, testi, screenshot e immagini per
+            rilevare possibili violazioni delle Regole della Community Meta
+            tramite AI.
+          </p>
+
+          <div style={{ marginTop: 24, maxWidth: 900 }}>
+            <button
+              onClick={() => setShowDisclaimer(!showDisclaimer)}
+              style={{
+                width: "100%",
+                background: "rgba(245, 158, 11, 0.12)",
+                border: "1px solid rgba(245, 158, 11, 0.35)",
+                borderRadius: 16,
+                padding: 18,
+                color: "#fbbf24",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                cursor: "pointer",
+                fontSize: 16,
+                fontWeight: "bold"
+              }}
+            >
+              <span>Disclaimer legale</span>
+              <span style={{ fontSize: 24, lineHeight: 1 }}>
+                {showDisclaimer ? "−" : "+"}
+              </span>
+            </button>
+
+            {showDisclaimer && (
+              <div
+                style={{
+                  marginTop: 10,
+                  background: "rgba(245, 158, 11, 0.08)",
+                  border: "1px solid rgba(245, 158, 11, 0.25)",
+                  borderRadius: 16,
+                  padding: 20
+                }}
+              >
+                <div
+                  style={{
+                    color: "#fde68a",
+                    lineHeight: 1.7,
+                    fontSize: 15
+                  }}
+                >
+                  Questa applicazione fornisce esclusivamente un’analisi
+                  preliminare automatizzata basata su modelli di intelligenza
+                  artificiale e non rappresenta una valutazione ufficiale di
+                  Meta/Facebook.
+                  <br />
+                  <br />
+                  L’eventuale presenza di contenuti potenzialmente problematici
+                  non implica necessariamente una violazione effettiva delle
+                  Regole della Community.
+                  <br />
+                  <br />
+                  Solo Meta Platforms può stabilire ufficialmente se un
+                  contenuto viola le proprie policy o richiede interventi di
+                  moderazione.
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
         <div
           style={{
-            background:
-              "#1e293b",
+            background: "#1e293b",
             borderRadius: 20,
-            padding: 30
+            padding: 30,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.4)"
           }}
         >
-          <label
-            style={labelStyle}
-          >
-            URL di origine /
-            link del post
-          </label>
+          <label style={labelStyle}>URL di origine / link del post</label>
 
           <input
             type="url"
-            value={sourceUrl}
-            onChange={(e) =>
-              setSourceUrl(
-                e.target.value
-              )
-            }
-            placeholder="Incolla il link del post Facebook..."
             style={inputStyle}
+            placeholder="Incolla qui il link del post Facebook. Il link viene usato solo come riferimento."
+            value={sourceUrl}
+            onChange={(e) => setSourceUrl(e.target.value)}
           />
 
-          <label
-            style={labelStyle}
-          >
-            Carica screenshot o
-            immagine
-          </label>
+          <label style={labelStyle}>Carica screenshot o immagine</label>
 
           <input
             type="file"
             accept="image/*"
-            onChange={
-              handleImageUpload
-            }
-            style={inputStyle}
+            onChange={handleImageUpload}
+            disabled={ocrLoading}
+            style={fileInputStyle}
           />
 
           {imageName && (
-            <div
-              style={{
-                marginBottom: 18,
-                color: "#93c5fd"
-              }}
-            >
-              Immagine
-              caricata:{" "}
-              <strong>
-                {imageName}
-              </strong>
+            <div style={infoBoxStyle}>
+              Immagine caricata: <strong>{imageName}</strong>
             </div>
           )}
 
-          {ocrProgress && (
-            <div
-              style={{
-                marginBottom: 18,
-                color: "#93c5fd"
-              }}
-            >
-              {ocrProgress}
-            </div>
-          )}
+          {ocrProgress && <p style={{ color: "#93c5fd" }}>{ocrProgress}</p>}
 
-          <label
-            style={labelStyle}
-          >
-            Contenuto da
-            analizzare
-          </label>
+          <label style={labelStyle}>Contenuto da analizzare</label>
 
           <textarea
-            value={text}
-            onChange={(e) =>
-              setText(
-                e.target.value
-              )
-            }
-            placeholder="Incolla qui testo, commenti o contenuti Facebook..."
             style={textareaStyle}
+            placeholder="Incolla qui il testo del post, commento o contenuto Facebook. Se carichi solo un’immagine, puoi lasciare vuoto questo campo."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
           />
 
-          <label
-            style={labelStyle}
-          >
-            Contesto /
-            spiegazione
-            facoltativa
-          </label>
+          <label style={labelStyle}>Contesto / spiegazione facoltativa</label>
 
           <textarea
-            value={context}
-            onChange={(e) =>
-              setContext(
-                e.target.value
-              )
-            }
-            placeholder="Aggiungi eventuale contesto..."
             style={{
               ...textareaStyle,
-              minHeight: 120
+              minHeight: 120,
+              fontSize: 18
             }}
+            placeholder="Aggiungi eventuale contesto utile per l’AI: dove è stato pubblicato il contenuto, tono della conversazione, intento satirico, rapporto tra gli utenti, minacce precedenti, ecc..."
+            value={context}
+            onChange={(e) => setContext(e.target.value)}
           />
 
           <div
             style={{
               display: "flex",
               gap: 12,
-              marginTop: 20,
-              flexWrap: "wrap"
+              flexWrap: "wrap",
+              marginTop: 20
             }}
           >
             <button
-              onClick={
-                analyzeContent
-              }
-              disabled={
-                loading ||
-                (!text.trim() &&
-                  !imageData)
-              }
+              onClick={analyzeContent}
+              disabled={loading || ocrLoading || (!text.trim() && !imageData)}
               style={{
-                background:
-                  "#2563eb",
+                background: loading ? "#475569" : "#2563eb",
                 color: "white",
                 border: "none",
                 borderRadius: 14,
-                padding:
-                  "16px 28px",
+                padding: "16px 28px",
                 fontSize: 18,
-                fontWeight:
-                  "bold",
+                fontWeight: "bold",
                 cursor:
-                  "pointer"
+                  loading || ocrLoading || (!text.trim() && !imageData)
+                    ? "not-allowed"
+                    : "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 10
               }}
             >
-              {loading
-                ? "Analisi AI in corso..."
-                : "Analizza contenuto"}
+              {loading && (
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 18,
+                    height: 18,
+                    border: "3px solid rgba(255,255,255,0.3)",
+                    borderTop: "3px solid white",
+                    borderRadius: "50%",
+                    animation: "spin 1s linear infinite"
+                  }}
+                />
+              )}
+
+              {loading ? "Analisi AI in corso..." : "Analizza contenuto"}
+            </button>
+
+            <button onClick={clearForm} style={secondaryButtonStyle}>
+              Pulisci
             </button>
 
             <button
-              onClick={() => {
-                setSourceUrl("");
-                setText("");
-                setContext("");
-                setImageData("");
-                setImageName("");
-                setOcrText("");
-                setResult("");
-                setOcrProgress(
-                  ""
-                );
-              }}
+              onClick={clearHistory}
               style={{
-                background:
-                  "#334155",
-                color: "white",
-                border: "none",
-                borderRadius: 14,
-                padding:
-                  "16px 28px",
-                fontSize: 18,
-                fontWeight:
-                  "bold",
-                cursor:
-                  "pointer"
+                ...secondaryButtonStyle,
+                background: "#7f1d1d"
               }}
             >
-              Pulisci
+              Cancella storico
             </button>
           </div>
         </div>
@@ -567,26 +572,19 @@ export default function Home() {
           <div
             style={{
               marginTop: 40,
-              background:
-                "#1e293b",
+              background: "#1e293b",
               borderRadius: 20,
               padding: 30
             }}
           >
             <div
               style={{
-                display:
-                  "inline-block",
-                background:
-                  riskInfo.background,
-                color:
-                  riskInfo.color,
-                padding:
-                  "10px 18px",
-                borderRadius:
-                  999,
-                fontWeight:
-                  "bold",
+                display: "inline-block",
+                background: riskInfo.background,
+                color: riskInfo.color,
+                padding: "10px 18px",
+                borderRadius: 999,
+                fontWeight: "bold",
                 marginBottom: 24,
                 border: `2px solid ${riskInfo.color}`
               }}
@@ -594,48 +592,135 @@ export default function Home() {
               {riskInfo.label}
             </div>
 
+            {sourceUrl && (
+              <div style={infoBoxStyle}>
+                <strong>URL di origine:</strong>
+                <br />
+                {sourceUrl}
+              </div>
+            )}
+
+            {imageName && (
+              <div style={infoBoxStyle}>
+                <strong>Immagine analizzata:</strong>
+                <br />
+                {imageName}
+              </div>
+            )}
+
             <div
               style={{
-                whiteSpace:
-                  "pre-wrap",
+                whiteSpace: "pre-wrap",
                 lineHeight: 1.7,
                 fontSize: 18,
                 color: "#e2e8f0",
-                background:
-                  "#0f172a",
+                background: "#0f172a",
                 padding: 24,
                 borderRadius: 16
               }}
               dangerouslySetInnerHTML={{
-                __html:
-                  renderLinkedReport(
-                    result
-                  )
+                __html: renderLinkedReport(result)
               }}
             />
 
-            <button
-              onClick={
-                copyReport
-              }
-              style={{
-                marginTop: 24,
-                background:
-                  "#2563eb",
-                color: "white",
-                border: "none",
-                borderRadius: 14,
-                padding:
-                  "14px 24px",
-                fontSize: 16,
-                fontWeight:
-                  "bold",
-                cursor:
-                  "pointer"
-              }}
-            >
+            <button onClick={copyReport} style={copyButtonStyle}>
               Copia report
             </button>
+          </div>
+        )}
+
+        {history.length > 0 && (
+          <div style={{ marginTop: 50 }}>
+            <h2 style={{ marginBottom: 20, fontSize: 36 }}>
+              Storico analisi
+            </h2>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 20
+              }}
+            >
+              {history.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    background: "#1e293b",
+                    borderRadius: 18,
+                    padding: 24
+                  }}
+                >
+                  <div
+                    style={{
+                      marginBottom: 12,
+                      color: "#93c5fd",
+                      fontSize: 14
+                    }}
+                  >
+                    {item.date}
+                  </div>
+
+                  {item.sourceUrl && (
+                    <div style={infoBoxStyle}>
+                      <strong>URL di origine:</strong>
+                      <br />
+                      {item.sourceUrl}
+                    </div>
+                  )}
+
+                  {item.imageName && (
+                    <div style={infoBoxStyle}>
+                      <strong>Immagine:</strong>
+                      <br />
+                      {item.imageName}
+                    </div>
+                  )}
+
+                  {item.content && (
+                    <div
+                      style={{
+                        marginBottom: 18,
+                        color: "#cbd5e1",
+                        whiteSpace: "pre-wrap"
+                      }}
+                    >
+                      {item.content}
+                    </div>
+                  )}
+
+                  {item.context && (
+                    <div
+                      style={{
+                        marginBottom: 18,
+                        color: "#fde68a",
+                        background: "rgba(245, 158, 11, 0.08)",
+                        border: "1px solid rgba(245, 158, 11, 0.25)",
+                        borderRadius: 12,
+                        padding: 14,
+                        whiteSpace: "pre-wrap"
+                      }}
+                    >
+                      <strong>Contesto fornito:</strong>
+                      <br />
+                      {item.context}
+                    </div>
+                  )}
+
+                  <div
+                    style={{
+                      background: "#0f172a",
+                      borderRadius: 14,
+                      padding: 18,
+                      whiteSpace: "pre-wrap",
+                      lineHeight: 1.6
+                    }}
+                  >
+                    {item.analysis}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -664,6 +749,16 @@ const inputStyle = {
   marginBottom: 22
 };
 
+const fileInputStyle = {
+  width: "100%",
+  marginBottom: 16,
+  padding: 14,
+  background: "#0f172a",
+  color: "white",
+  border: "1px solid #334155",
+  borderRadius: 12
+};
+
 const textareaStyle = {
   width: "100%",
   minHeight: 260,
@@ -676,4 +771,37 @@ const textareaStyle = {
   resize: "vertical",
   outline: "none",
   boxSizing: "border-box"
+};
+
+const secondaryButtonStyle = {
+  background: "#334155",
+  color: "white",
+  border: "none",
+  borderRadius: 14,
+  padding: "16px 28px",
+  fontSize: 18,
+  fontWeight: "bold",
+  cursor: "pointer"
+};
+
+const copyButtonStyle = {
+  marginTop: 24,
+  background: "#2563eb",
+  color: "white",
+  border: "none",
+  borderRadius: 14,
+  padding: "14px 24px",
+  fontSize: 16,
+  fontWeight: "bold",
+  cursor: "pointer"
+};
+
+const infoBoxStyle = {
+  background: "#0f172a",
+  border: "1px solid #334155",
+  borderRadius: 14,
+  padding: 16,
+  marginBottom: 22,
+  color: "#93c5fd",
+  wordBreak: "break-word"
 };
