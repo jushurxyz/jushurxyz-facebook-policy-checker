@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Tesseract from "tesseract.js";
 
 export default function Home() {
   const [sourceUrl, setSourceUrl] = useState("");
@@ -9,20 +8,17 @@ export default function Home() {
   const [context, setContext] = useState("");
   const [imageData, setImageData] = useState("");
   const [imageName, setImageName] = useState("");
-  const [ocrText, setOcrText] = useState("");
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const [ocrProgress, setOcrProgress] = useState("");
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageStatus, setImageStatus] = useState("");
   const [history, setHistory] = useState([]);
   const [analysisStep, setAnalysisStep] = useState("Preparazione analisi...");
   const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("policy_checker_history");
-    if (saved) {
-      setHistory(JSON.parse(saved));
-    }
+    if (saved) setHistory(JSON.parse(saved));
   }, []);
 
   useEffect(() => {
@@ -30,7 +26,6 @@ export default function Home() {
 
     const steps = [
       "Preparazione analisi...",
-      "Controllo linguaggio e tono...",
       "Analisi visiva dell’immagine...",
       "Valutazione possibili violazioni...",
       "Confronto con aree policy Meta...",
@@ -51,26 +46,14 @@ export default function Home() {
     const lower = result.toLowerCase();
 
     if (lower.includes("alto")) {
-      return {
-        label: "RISCHIO ALTO",
-        color: "#dc2626",
-        background: "#7f1d1d"
-      };
+      return { label: "RISCHIO ALTO", color: "#dc2626", background: "#7f1d1d" };
     }
 
     if (lower.includes("medio")) {
-      return {
-        label: "RISCHIO MEDIO",
-        color: "#f59e0b",
-        background: "#78350f"
-      };
+      return { label: "RISCHIO MEDIO", color: "#f59e0b", background: "#78350f" };
     }
 
-    return {
-      label: "RISCHIO BASSO",
-      color: "#22c55e",
-      background: "#14532d"
-    };
+    return { label: "RISCHIO BASSO", color: "#22c55e", background: "#14532d" };
   }, [result]);
 
   function renderLinkedReport(report) {
@@ -110,7 +93,6 @@ export default function Home() {
     policyLinks.forEach((policy) => {
       policy.keywords.forEach((keyword) => {
         const regex = new RegExp(`(${keyword})`, "gi");
-
         linkedText = linkedText.replace(
           regex,
           `<a href="${policy.url}" target="_blank" rel="noopener noreferrer" style="color:#93c5fd;text-decoration:underline;">$1</a>`
@@ -133,7 +115,6 @@ export default function Home() {
     };
 
     const updatedHistory = [newEntry, ...history];
-
     setHistory(updatedHistory);
 
     localStorage.setItem(
@@ -143,7 +124,7 @@ export default function Home() {
   }
 
   async function analyzeContent() {
-    if (loading || ocrLoading) return;
+    if (loading || imageLoading) return;
 
     if (!text.trim() && !imageData) {
       setResult("Inserisci un testo da analizzare oppure carica un’immagine.");
@@ -165,13 +146,11 @@ export default function Home() {
           text,
           context,
           imageData,
-          imageName,
-          ocrText
+          imageName
         })
       });
 
       const data = await response.json();
-
       const analysisResult = data.result || "Nessun risultato ricevuto.";
 
       setResult(analysisResult);
@@ -183,46 +162,28 @@ export default function Home() {
     setLoading(false);
   }
 
-  async function handleImageUpload(event) {
+  function handleImageUpload(event) {
     const file = event.target.files[0];
 
     if (!file) return;
 
+    setImageLoading(true);
+    setImageStatus("Caricamento immagine in corso...");
     setImageName(file.name);
-    setOcrLoading(true);
-    setOcrProgress("Caricamento immagine e lettura testo di supporto...");
 
     const reader = new FileReader();
 
-    reader.onload = async () => {
-      const base64Image = reader.result;
-      setImageData(base64Image);
+    reader.onload = () => {
+      setImageData(reader.result);
+      setImageStatus(
+        "Immagine caricata correttamente. Verrà analizzata con AI Vision."
+      );
+      setImageLoading(false);
+    };
 
-      try {
-        const ocrResult = await Tesseract.recognize(file, "ita+eng", {
-          logger: (m) => {
-            if (m.status === "recognizing text") {
-              setOcrProgress(
-                `OCR di supporto: ${Math.round(m.progress * 100)}%`
-              );
-            }
-          }
-        });
-
-        const extractedText = ocrResult.data.text.trim();
-        setOcrText(extractedText || "");
-
-        setOcrProgress(
-          "Immagine caricata correttamente. L’AI analizzerà anche il contenuto visivo."
-        );
-      } catch (error) {
-        setOcrText("");
-        setOcrProgress(
-          "Immagine caricata. OCR non disponibile, ma l’AI Vision analizzerà comunque la foto."
-        );
-      }
-
-      setOcrLoading(false);
+    reader.onerror = () => {
+      setImageStatus("Errore durante il caricamento dell’immagine.");
+      setImageLoading(false);
     };
 
     reader.readAsDataURL(file);
@@ -234,9 +195,8 @@ export default function Home() {
     setContext("");
     setImageData("");
     setImageName("");
-    setOcrText("");
     setResult("");
-    setOcrProgress("");
+    setImageStatus("");
   }
 
   function clearHistory() {
@@ -473,7 +433,7 @@ export default function Home() {
             type="file"
             accept="image/*"
             onChange={handleImageUpload}
-            disabled={ocrLoading}
+            disabled={imageLoading}
             style={fileInputStyle}
           />
 
@@ -483,7 +443,7 @@ export default function Home() {
             </div>
           )}
 
-          {ocrProgress && <p style={{ color: "#93c5fd" }}>{ocrProgress}</p>}
+          {imageStatus && <p style={{ color: "#93c5fd" }}>{imageStatus}</p>}
 
           <label style={labelStyle}>Contenuto da analizzare</label>
 
@@ -517,7 +477,7 @@ export default function Home() {
           >
             <button
               onClick={analyzeContent}
-              disabled={loading || ocrLoading || (!text.trim() && !imageData)}
+              disabled={loading || imageLoading || (!text.trim() && !imageData)}
               style={{
                 background: loading ? "#475569" : "#2563eb",
                 color: "white",
@@ -527,7 +487,7 @@ export default function Home() {
                 fontSize: 18,
                 fontWeight: "bold",
                 cursor:
-                  loading || ocrLoading || (!text.trim() && !imageData)
+                  loading || imageLoading || (!text.trim() && !imageData)
                     ? "not-allowed"
                     : "pointer",
                 display: "flex",
@@ -635,13 +595,7 @@ export default function Home() {
               Storico analisi
             </h2>
 
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 20
-              }}
-            >
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               {history.map((item) => (
                 <div
                   key={item.id}
