@@ -52,15 +52,19 @@ Testo manuale:
 Testo OCR:
 "${ocrText || "Nessun OCR disponibile."}"
 
-Restituisci:
-- valutazione generale
-- categorie possibili
-- livello di rischio
-- elementi problematici
-- analisi visiva
-- spiegazione
-- suggerimento operativo
-- avvertenza finale
+Restituisci un report strutturato contenente:
+
+1. VALUTAZIONE GENERALE
+2. CATEGORIE POSSIBILI
+3. LIVELLO DI RISCHIO
+4. ELEMENTI PROBLEMATICI
+5. ANALISI VISIVA
+6. TESTO RILEVATO NELL'IMMAGINE
+7. SPIEGAZIONE
+8. SUGGERIMENTO OPERATIVO
+9. AVVERTENZA FINALE
+
+Il tono deve essere prudente, professionale e non definitivo.
 `;
 
     const messageContent = [
@@ -80,9 +84,9 @@ Restituisci:
     }
 
     const models = [
+      "qwen/qwen2.5-vl-32b-instruct:free",
       "google/gemma-4-31b-it:free",
-      "qwen/qwen2.5-vl-72b-instruct:free",
-      "meta-llama/llama-3.2-11b-vision-instruct:free"
+      "openrouter/free"
     ];
 
     let finalResponse = null;
