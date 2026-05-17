@@ -78,69 +78,17 @@ export default function Home() {
 
     let linkedText = escapeHtml(report);
 
-    linkedText = linkedText.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    linkedText = linkedText.replace(
+      /\*\*(.*?)\*\*/g,
+      "<strong>$1</strong>"
+    );
+
+    linkedText = linkedText.replace(
+      /(https:\/\/transparency\.meta\.com\/policies\/community-standards\/[^\s<]+)/g,
+      `<a href="$1" target="_blank" rel="noopener noreferrer" style="color:#93c5fd;text-decoration:underline;font-weight:bold;">Leggi la norma Meta</a>`
+    );
+
     linkedText = linkedText.replace(/\n/g, "<br>");
-
-    const replacements = [
-      {
-        terms: [
-          "incitamento all'odio",
-          "discorsi d'odio",
-          "hateful conduct",
-          "odio"
-        ],
-        url:
-          "https://transparency.meta.com/policies/community-standards/hateful-conduct/"
-      },
-      {
-        terms: ["minacce", "violenza", "violence and incitement"],
-        url:
-          "https://transparency.meta.com/policies/community-standards/violence-incitement/"
-      },
-      {
-        terms: ["bullismo", "molestie", "bullying and harassment"],
-        url:
-          "https://transparency.meta.com/policies/community-standards/bullying-harassment/"
-      },
-      {
-        terms: [
-          "nudità",
-          "contenuti sessuali",
-          "adult nudity",
-          "sexual activity"
-        ],
-        url:
-          "https://transparency.meta.com/policies/community-standards/adult-nudity-sexual-activity/"
-      },
-      {
-        terms: ["autolesionismo", "suicidio", "self-injury"],
-        url:
-          "https://transparency.meta.com/policies/community-standards/suicide-self-injury/"
-      },
-      {
-        terms: ["spam", "truffa", "frode"],
-        url:
-          "https://transparency.meta.com/policies/community-standards/spam/"
-      },
-      {
-        terms: ["privacy", "dati personali"],
-        url:
-          "https://transparency.meta.com/policies/community-standards/privacy-violations/"
-      }
-    ];
-
-    replacements.forEach((item) => {
-      item.terms
-        .sort((a, b) => b.length - a.length)
-        .forEach((term) => {
-          const regex = new RegExp(`\\b(${term})\\b`, "gi");
-
-          linkedText = linkedText.replace(
-            regex,
-            `<a href="${item.url}" target="_blank" rel="noopener noreferrer" style="color:#93c5fd;text-decoration:underline;font-weight:bold;">$1</a>`
-          );
-        });
-    });
 
     return linkedText;
   }
@@ -552,6 +500,95 @@ export default function Home() {
             <button onClick={copyReport} style={copyButtonStyle}>
               Copia report
             </button>
+          </div>
+        )}
+
+        {history.length > 0 && (
+          <div style={{ marginTop: 50 }}>
+            <h2 style={{ marginBottom: 20, fontSize: 36 }}>
+              Storico analisi
+            </h2>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              {history.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    background: "#1e293b",
+                    borderRadius: 18,
+                    padding: 24
+                  }}
+                >
+                  <div
+                    style={{
+                      marginBottom: 12,
+                      color: "#93c5fd",
+                      fontSize: 14
+                    }}
+                  >
+                    {item.date}
+                  </div>
+
+                  {item.sourceUrl && (
+                    <div style={infoBoxStyle}>
+                      <strong>URL di origine:</strong>
+                      <br />
+                      {item.sourceUrl}
+                    </div>
+                  )}
+
+                  {item.imageName && (
+                    <div style={infoBoxStyle}>
+                      <strong>Immagine:</strong>
+                      <br />
+                      {item.imageName}
+                    </div>
+                  )}
+
+                  {item.content && (
+                    <div
+                      style={{
+                        marginBottom: 18,
+                        color: "#cbd5e1",
+                        whiteSpace: "pre-wrap"
+                      }}
+                    >
+                      {item.content}
+                    </div>
+                  )}
+
+                  {item.context && (
+                    <div
+                      style={{
+                        marginBottom: 18,
+                        color: "#fde68a",
+                        background: "rgba(245, 158, 11, 0.08)",
+                        border: "1px solid rgba(245, 158, 11, 0.25)",
+                        borderRadius: 12,
+                        padding: 14,
+                        whiteSpace: "pre-wrap"
+                      }}
+                    >
+                      <strong>Contesto fornito:</strong>
+                      <br />
+                      {item.context}
+                    </div>
+                  )}
+
+                  <div
+                    style={{
+                      background: "#0f172a",
+                      borderRadius: 14,
+                      padding: 18,
+                      whiteSpace: "pre-wrap",
+                      lineHeight: 1.6
+                    }}
+                  >
+                    {item.analysis}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
