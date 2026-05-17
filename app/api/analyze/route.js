@@ -26,7 +26,7 @@ IMPORTANTE:
 - Non inventare norme inesistenti.
 - Rispondi sempre in italiano.
 - Il tono deve essere professionale, prudente e chiaro.
-- L'URL fornito è solo un riferimento.
+- L'URL fornito è solo un riferimento: non devi fingere di averlo visitato.
 - Se è presente un'immagine, analizza il contenuto visivo e anche eventuale testo visibile nell'immagine.
 
 URL di origine:
@@ -44,14 +44,66 @@ Testo manuale:
 Restituisci un report strutturato contenente:
 
 1. VALUTAZIONE GENERALE
+Indica se il contenuto appare non problematico, potenzialmente problematico o ad alto rischio.
+
 2. CATEGORIE POSSIBILI
+Indica una o più categorie tra:
+- Incitamento all'odio
+- Minacce o violenza
+- Bullismo o molestie
+- Linguaggio offensivo
+- Contenuti sessuali o nudità
+- Contenuti violenti o grafici
+- Autolesionismo
+- Spam o truffa
+- Disinformazione
+- Violazione della privacy
+- Altro
+
 3. LIVELLO DI RISCHIO
+Basso / Medio / Alto
+
 4. ELEMENTI PROBLEMATICI
+Riporta solo brevi estratti o descrizioni degli elementi problematici.
+
 5. ANALISI VISIVA
+Se è presente un'immagine, descrivi cosa appare e quali elementi visivi sono rilevanti.
+
 6. TESTO VISIBILE NELL'IMMAGINE
-7. SPIEGAZIONE
-8. SUGGERIMENTO OPERATIVO
-9. AVVERTENZA FINALE
+Se nell'immagine è presente testo leggibile, riassumilo o riportane solo le parti utili.
+
+7. NORMA META POTENZIALMENTE COINVOLTA
+Indica in modo prudente la possibile area delle Community Standards Meta coinvolta.
+
+8. RIFERIMENTI META
+Indica i riferimenti più pertinenti alle Community Standards Meta usando esattamente questo formato:
+
+- Nome norma: URL ufficiale
+
+Usa solo URL ufficiali del Transparency Center Meta tra questi:
+https://transparency.meta.com/policies/community-standards/hateful-conduct/
+https://transparency.meta.com/policies/community-standards/violence-incitement/
+https://transparency.meta.com/policies/community-standards/bullying-harassment/
+https://transparency.meta.com/policies/community-standards/adult-nudity-sexual-activity/
+https://transparency.meta.com/policies/community-standards/suicide-self-injury/
+https://transparency.meta.com/policies/community-standards/spam/
+https://transparency.meta.com/policies/community-standards/privacy-violations/
+
+Se nessuno di questi riferimenti è pertinente, scrivi:
+- Nessun riferimento Meta specifico individuato.
+
+9. SPIEGAZIONE
+Spiega perché il contenuto potrebbe essere problematico o perché non lo è.
+
+10. SUGGERIMENTO OPERATIVO
+Indica se:
+- non sembra necessario intervenire
+- conviene revisionare manualmente
+- conviene segnalare a Facebook/Meta
+- conviene conservare uno screenshot come prova
+
+11. AVVERTENZA FINALE
+Ricorda che solo Meta può stabilire ufficialmente se il contenuto viola le proprie regole.
 `;
 
     const messageContent = [{ type: "text", text: prompt }];
