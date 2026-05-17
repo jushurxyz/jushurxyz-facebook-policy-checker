@@ -76,7 +76,7 @@ Restituisci un report strutturato contenente:
           "X-Title": "Facebook Policy Checker"
         },
         body: JSON.stringify({
-          model: "qwen/qwen2.5-vl-32b-instruct:free",
+          model: "openrouter/free",
           messages: [
             {
               role: "user",
